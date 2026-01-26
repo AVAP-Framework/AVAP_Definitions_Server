@@ -1,0 +1,41 @@
+{
+  "name": "grpc-health-check",
+  "version": "2.1.0",
+  "author": "Google Inc.",
+  "description": "Health check client and service for use with gRPC-node",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grpc/grpc-node.git"
+  },
+  "bugs": "https://github.com/grpc/grpc-node/issues",
+  "contributors": [
+    {
+      "name": "Michael Lumish",
+      "email": "mlumish@google.com"
+    }
+  ],
+  "scripts": {
+    "compile": "tsc -p .",
+    "prepare": "npm run generate-types && npm run compile",
+    "generate-types": "proto-loader-gen-types --keepCase --longs String --enums String --defaults --oneofs --includeComments --includeDirs proto/ -O src/generated health/v1/health.proto",
+    "generate-test-types": "proto-loader-gen-types --keepCase --longs String --enums String --defaults --oneofs --includeComments --includeDirs proto/ -O test/generated --grpcLib=@grpc/grpc-js health/v1/health.proto"
+  },
+  "dependencies": {
+    "@grpc/proto-loader": "^0.7.13"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "src",
+    "build",
+    "proto"
+  ],
+  "main": "build/src/health.js",
+  "types": "build/src/health.d.ts",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@grpc/grpc-js": "file:../grpc-js",
+    "@types/mocha": "^10.0.10",
+    "typescript": "^5.2.2"
+  }
+}

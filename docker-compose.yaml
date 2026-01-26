@@ -1,0 +1,66 @@
+services:
+  avap-definition-engine:
+    build: .
+    container_name: avap-brain
+    restart: unless-stopped
+    
+    # --- 🚀 V8 PERFORMANCE TUNING ---
+    # Sobreescribimos el comando de inicio para inyectar flags al motor V8:
+    # --max-old-space-size=4096: Asigna 4GB de RAM al Heap (evita GCs frecuentes).
+    # --min-semi-space-size=64: Aumenta la memoria "joven" para procesar ráfagas de objetos gRPC.
+    # --expose-gc: Permite que nuestro código invoque global.gc() tras el arranque.
+    command: node --max-old-space-size=4096 --min-semi-space-size=64 --expose-gc src/server.js
+    
+    # --- 🛡️ OS TUNING ---
+    # Elevamos los límites del kernel para soportar miles de conexiones TCP sin errores "Too many open files".
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    
+    ports:
+      - "50052:50051"
+    environment:
+      - PORT=50051
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/avap_db
+      - AVAP_INTERNAL_KEY=avap_secret_key_2026
+      # NODE_ENV=production desactiva verificaciones de desarrollo de Express/gRPC
+      - NODE_ENV=production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - avap-net
+    
+    # (Opcional) CPU Pinning para entornos Linux Nativos
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '8.0'
+    #       memory: 4G
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: avap-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=avap_db
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - avap-net
+
+networks:
+  avap-net:
+    driver: bridge
+
+volumes:
+  pg_data:

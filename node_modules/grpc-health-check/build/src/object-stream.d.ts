@@ -1,0 +1,36 @@
+import { Readable, Writable } from 'stream';
+interface EmitterAugmentation1<Name extends string | symbol, Arg> {
+    addListener(event: Name, listener: (arg1: Arg) => void): this;
+    emit(event: Name, arg1: Arg): boolean;
+    on(event: Name, listener: (arg1: Arg) => void): this;
+    once(event: Name, listener: (arg1: Arg) => void): this;
+    prependListener(event: Name, listener: (arg1: Arg) => void): this;
+    prependOnceListener(event: Name, listener: (arg1: Arg) => void): this;
+    removeListener(event: Name, listener: (arg1: Arg) => void): this;
+}
+export type WriteCallback = (error: Error | null | undefined) => void;
+export interface IntermediateObjectReadable<T> extends Readable {
+    read(size?: number): any & T;
+}
+export type ObjectReadable<T> = {
+    read(size?: number): T;
+} & EmitterAugmentation1<'data', T> & IntermediateObjectReadable<T>;
+export interface IntermediateObjectWritable<T> extends Writable {
+    _write(chunk: any & T, encoding: string, callback: Function): void;
+    write(chunk: any & T, cb?: WriteCallback): boolean;
+    write(chunk: any & T, encoding?: any, cb?: WriteCallback): boolean;
+    setDefaultEncoding(encoding: string): this;
+    end(): ReturnType<Writable['end']> extends Writable ? this : void;
+    end(chunk: any & T, cb?: Function): ReturnType<Writable['end']> extends Writable ? this : void;
+    end(chunk: any & T, encoding?: any, cb?: Function): ReturnType<Writable['end']> extends Writable ? this : void;
+}
+export interface ObjectWritable<T> extends IntermediateObjectWritable<T> {
+    _write(chunk: T, encoding: string, callback: Function): void;
+    write(chunk: T, cb?: Function): boolean;
+    write(chunk: T, encoding?: any, cb?: Function): boolean;
+    setDefaultEncoding(encoding: string): this;
+    end(): ReturnType<Writable['end']> extends Writable ? this : void;
+    end(chunk: T, cb?: Function): ReturnType<Writable['end']> extends Writable ? this : void;
+    end(chunk: T, encoding?: any, cb?: Function): ReturnType<Writable['end']> extends Writable ? this : void;
+}
+export {};

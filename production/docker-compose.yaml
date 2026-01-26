@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: avap-engine
+  labels:
+    app: avap-engine
+spec:
+  replicas: 3  # High Availability (Mínimo 3 para Rolling Updates sin downtime)
+  selector:
+    matchLabels:
+      app: avap-engine
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: avap-engine
+      annotations:
+        # Prometheus Scraping (Standard)
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "50051"
+    spec:
+      containers:
+        - name: avap-brain
+          image: avap-registry/definition-engine:v4.0.0
+          imagePullPolicy: Always
+          
+          # 🚀 V8 PERFORMANCE INJECTION
+          # Inyectamos las flags directamente aquí.
+          # Calculo: Heap (4GB) + Young Gen + Overhead
+          command: ["node"]
+          args: 
+            - "--max-old-space-size=4096" # 4GB Heap Estricto
+            - "--min-semi-space-size=64"  # Memoria joven rápida
+            - "--no-lazy"                 # Compilación anticipada
+            - "--expose-gc"               # Gestión manual en arranque
+            - "src/server.js"
+            
+          ports:
+            - containerPort: 50051
+              name: grpc-port
+
+          # 🛡️ RECURSOS (QoS: GUARANTEED)
+          # Al poner requests == limits, obtenemos prioridad de CPU y acceso exclusivo.
+          resources:
+            requests:
+              memory: "5Gi"  # 4GB para V8 + 1GB para Sistema/Buffers
+              cpu: "4000m"   # 4 Cores completos dedicados
+            limits:
+              memory: "5Gi"
+              cpu: "4000m"
+
+          # 🩺 HEALTH CHECKS (gRPC Native)
+          # K8s (v1.24+) soporta checks gRPC nativos. 
+          # Esto usa tu implementación de 'grpc.health.v1' en el código V4.
+          readinessProbe:
+            grpc:
+              port: 50051
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            grpc:
+              port: 50051
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: UV_THREADPOOL_SIZE
+              value: "64" # Aumentar hilos para I/O DNS/Crypto
+            # Inyección de Secretos (Kubernetes Best Practice)
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: avap-secrets
+                  key: database-url
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: avap-secrets
+                  key: api-key
+                  
+      # Afinidad (Opcional): Intentar que los pods no caigan en el mismo nodo físico
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - avap-engine
+              topologyKey: "kubernetes.io/hostname"

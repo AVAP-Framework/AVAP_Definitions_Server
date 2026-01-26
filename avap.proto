@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package avap;
+
+service DefinitionEngine {
+  // Get only a command definition (Legacy / Debug)
+  rpc GetCommand (CommandRequest) returns (CommandResponse);
+  
+  // Get all the catalog definitions
+  rpc SyncCatalog (Empty) returns (CatalogResponse);
+}
+
+// Empty message
+message Empty {}
+
+message CommandRequest {
+  string name = 1;
+}
+
+// Only a command definition
+message CommandResponse {
+  string name = 1;
+  string type = 2;
+  string interface_json = 3;
+  bytes code = 4;
+  string hash = 5;
+}
+
+// All commands definitions
+message CatalogResponse {
+  repeated CommandResponse commands = 1;
+  int32 total_count = 2;
+  string version_hash = 3;
+}

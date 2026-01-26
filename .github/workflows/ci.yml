@@ -1,0 +1,111 @@
+name: AVAP Definition Engine CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  integrity:
+    name: "STEP 1: Functional Integrity"
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: avap_user
+          POSTGRES_PASSWORD: avap_password
+          POSTGRES_DB: avap_db
+        ports: [5432:5432]
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - name: Init DB & Test
+        env:
+          DATABASE_URL: postgres://avap_user:avap_password@localhost:5432/avap_db
+          API_KEY: avap_secret_key_2026
+        run: |
+          PGPASSWORD=avap_password psql -h localhost -U avap_user -d avap_db -f init.sql
+          npm test
+
+  performance:
+    name: "STEP 2: Performance & Budget"
+    needs: integrity
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: avap_user
+          POSTGRES_PASSWORD: avap_password
+          POSTGRES_DB: avap_db
+        ports: [5432:5432]
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install & Benchmark
+        env:
+          API_KEY: avap_secret_key_2026
+          DATABASE_URL: postgres://avap_user:avap_password@localhost:5432/avap_db
+          PORT: 50051
+          TARGET: "localhost:50051" 
+        run: |
+          npm ci
+          pip install grpcio grpcio-tools
+          PGPASSWORD=avap_password psql -h localhost -U avap_user -d avap_db -f init.sql
+          node src/server.js &
+          timeout 30s sh -c 'until nc -z localhost 50051; do sleep 1; done'
+          
+          wget https://github.com/bojand/ghz/releases/download/v0.120.0/ghz-linux-x86_64.tar.gz
+          tar -xf ghz-linux-x86_64.tar.gz
+          ./ghz --insecure --proto ./avap.proto --call avap.DefinitionEngine.GetCommand --data '{"name":"if"}' --metadata "{\"x-avap-auth\":\"$API_KEY\"}" --total 2000 --concurrency 10 localhost:50051
+          
+          python -m grpc_tools.protoc -I. --python_out=app/core --grpc_python_out=app/core avap.proto
+          sed -i 's/import avap_pb2 as avap__pb2/from . import avap_pb2 as avap__pb2/' app/core/avap_pb2_grpc.py
+          PYTHONPATH=. python tests/benchmark_brain.py
+
+  docker_build:
+    name: "STEP 3: Containerize"
+    needs: performance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build Docker Image
+        # Usamos build-push-action con 'load: true' para que la imagen se quede en el host local
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          tags: avap-engine:latest
+          load: true 
+          
+      - name: Verify Image
+        run: |
+          docker images avap-engine:latest
+          docker inspect avap-engine:latest | grep -i version || echo "Image built successfully"
+
+  summary:
+    name: "Pipeline Summary"
+    needs: [integrity, performance, docker_build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "===================================================="
+          echo "      AVAP DEFINITIONS ENGINE STATUS SUMMARY        "
+          echo "===================================================="
+          echo " 1. INTEGRITY:  ${{ needs.integrity.result == 'success' && 'PASSED' || 'FAILED' }}"
+          echo " 2. CAPACITY:   ${{ needs.performance.result == 'success' && 'MEASURED' || 'FAILED' }}"
+          echo " 3. DOCKER:     ${{ needs.docker_build.result == 'success' && 'BUILT' || 'FAILED' }}"
+          echo "===================================================="
