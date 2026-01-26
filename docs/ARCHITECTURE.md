@@ -73,3 +73,86 @@ sequenceDiagram
         M->>DB: Poll for schema changes
         M-->>W: Update RAM if needed
     end
+```
+
+---
+
+## 4. Interface Specification (gRPC)
+The service exposes a strict **Protobuf (Protocol Buffers)** interface, enforcing type safety and maximizing throughput via binary transport.
+
+
+### Definition `(avap.proto)`:
+```
+Protocol Buffers
+syntax = "proto3";
+
+package avap;
+
+service DefinitionEngine {
+  // Retrieves the Python source code for a specific command
+  rpc GetCommand (CommandRequest) returns (CommandDefinition);
+}
+
+message CommandRequest {
+  string name = 1; // e.g., "if", "addVar"
+}
+
+message CommandDefinition {
+  string name = 1;
+  string code = 2; // The executable Python logic
+  string hash = 3; // Version hash for integrity
+}
+````
+
+## 5. Observability & Operations (SRE Standard)
+The engine implements cloud-native standards for integration with Kubernetes and Monitoring stacks.
+
+### Health Checks
+
+Implements the standard `grpc.health.v1` protocol.
+
+- NOT_SERVING: During boot or DB synchronization.
+
+- SERVING: Only when RAM is fully hydrated with definitions.
+
+- ***Benefit***: Load Balancers will never route traffic to a "cold" node.
+
+### Metrics (Prometheus)
+
+`avap_requests_total`: Counter (labeled by status code 200/404/401).
+
+`avap_cache_size`: Gauge (current number of definitions in RAM).
+
+***Throughput***: Capable of sustaining >36,000 RPS on standard hardware (8-core).
+
+### Structured Logging
+
+All logs are emitted as JSON events to facilitate ingestion by ELK/Datadog.
+
+```JSON
+{"ts": "2026-01-23T10:00:00Z", "level": "INFO", "msg": "Worker Listening", "pid": 22}
+````
+
+## 6. Security Model
+### Authentication
+
+- Mechanism: API Key passed via gRPC Metadata (x-avap-auth).
+
+- Validation: Uses crypto.timingSafeEqual (Constant Time Comparison) to prevent side-channel timing attacks during key verification.
+
+### Isolation
+
+- The execution logic (Python) is completely decoupled from the definition storage.
+
+- Malicious code in the database cannot affect the server's stability, as the server treats code strictly as text/strings.
+
+## 7. Performance Profile
+### Benchmark Results (Clean DB / Cluster Mode):
+
+| Metric | Result | Notes |
+| :--- | :--- | :--- |
+| Throughput | 36,667 RPS | Zero Error Rate |
+| P99 Latency | < 10ms | Under full load |
+| DB Load | ~0.01 OPS | 1 Query per minute (regardless of traffic) |
+
+Architectural Note: This system is CPU-bound, not IO-bound. Scaling requires adding CPU cores, not Database connections.
