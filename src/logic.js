@@ -2,38 +2,32 @@ const grpc = require('@grpc/grpc-js');
 const crypto = require('crypto');
 const pool = require('./db');
 
-// --- IN-MEMORY CACHE ---
+// In-memory cache
 const definitionCache = new Map();
 
-/**
- * Source code packing
- */
 function packForLSP(pythonCode) {
     const MAGIC = 'AVAP';
     const VERSION = 1;
-    // Key for packing
+
     const SECRET = Buffer.from('avap_secure_signature_key_2026', 'utf-8');
     
     const payload = Buffer.from(pythonCode, 'utf-8');
     const header = Buffer.alloc(10);
     
-    // Write the header in Big-Endian format
-    header.write(MAGIC, 0, 4, 'ascii');        // Magic (4 bytes)
-    header.writeUInt16BE(VERSION, 4);          // Version (2 bytes)
-    header.writeUInt32BE(payload.length, 6);   // Payload Size (4 bytes)
+    // Header
+    header.write(MAGIC, 0, 4, 'ascii');        
+    header.writeUInt16BE(VERSION, 4);          
+    header.writeUInt32BE(payload.length, 6);  
 
-    // Generate signature HMAC-SHA256 over [Header + Payload]
+    // Signature HMAC-SHA256 [Header + Payload]
     const hmac = crypto.createHmac('sha256', SECRET);
     hmac.update(Buffer.concat([header, payload]));
-    const signature = hmac.digest(); // 32 bytes
+    const signature = hmac.digest(); 
 
-    // Final structure: [Header][Signature][Payload]
     return Buffer.concat([header, signature, payload]);
 }
 
-/**
- * Loading and compilation process
- */
+// Load from database
 async function loadDefinitions() {
     console.log("[AVAP_Definitions] Initializing Build Pipeline...");
     try {
@@ -48,12 +42,10 @@ async function loadDefinitions() {
         for (const row of res.rows) {
             let finalBytecode = row.bytecode;
 
-            // Verificamos si el bytecode ya es un paquete AVAP válido
             if (!finalBytecode || !finalBytecode.slice(0, 4).equals(Buffer.from('AVAP'))) {
-                console.log(`[BUILD] Packaging: ${row.name}`);
+                console.log(`[AVAP_Definitions] Packaging: ${row.name}`);
                 finalBytecode = packForLSP(row.source_code || "");
                 
-                // Persistimos para evitar re-empaquetar en el próximo reinicio
                 await pool.query(`
                     INSERT INTO avap_bytecode (command_name, bytecode, source_hash)
                     VALUES ($1, $2, $3)
@@ -75,9 +67,7 @@ async function loadDefinitions() {
     }
 }
 
-/**
- * Security validation
- */
+
 const isAuthorized = (metadata, apiKeyBuffer) => {
     const authVal = metadata['x-avap-auth'];
     if (!authVal) return false;
@@ -87,9 +77,7 @@ const isAuthorized = (metadata, apiKeyBuffer) => {
     return crypto.timingSafeEqual(receivedBuffer, apiKeyBuffer);
 };
 
-/**
- * Get a command definition
- */
+// Serve a command
 const getCommandLogic = (call, callback, apiKeyBuffer) => {
     const metadata = call.metadata.getMap();
     if (!isAuthorized(metadata, apiKeyBuffer)) {
@@ -110,9 +98,7 @@ const getCommandLogic = (call, callback, apiKeyBuffer) => {
     }
 };
 
-/**
- * Sync catalog (Batch fetch for ALS)
- */
+// Sync the catalog
 const syncCatalogLogic = (call, callback, apiKeyBuffer) => {
     const metadata = call.metadata.getMap();
     if (!isAuthorized(metadata, apiKeyBuffer)) {
