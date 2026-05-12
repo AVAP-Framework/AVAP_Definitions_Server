@@ -24,21 +24,31 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\navap.proto\x12\x04\x61vap\"\x07\n\x05\x45mpty\"\x1e\n\x0e\x43ommandRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"a\n\x0f\x43ommandResponse\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\x16\n\x0einterface_json\x18\x03 \x01(\t\x12\x0c\n\x04\x63ode\x18\x04 \x01(\t\x12\x0c\n\x04hash\x18\x05 \x01(\t\"e\n\x0f\x43\x61talogResponse\x12\'\n\x08\x63ommands\x18\x01 \x03(\x0b\x32\x15.avap.CommandResponse\x12\x13\n\x0btotal_count\x18\x02 \x01(\x05\x12\x14\n\x0cversion_hash\x18\x03 \x01(\t2\x80\x01\n\x10\x44\x65\x66initionEngine\x12\x39\n\nGetCommand\x12\x14.avap.CommandRequest\x1a\x15.avap.CommandResponse\x12\x31\n\x0bSyncCatalog\x12\x0b.avap.Empty\x1a\x15.avap.CatalogResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\navap.proto\x12\x04\x61vap\"\x07\n\x05\x45mpty\"\x1e\n\x0e\x43ommandRequest\x12\x0c\n\x04name\x18\x01 \x01(\t\"v\n\x0f\x43ommandResponse\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\x16\n\x0einterface_json\x18\x03 \x01(\t\x12\x0c\n\x04\x63ode\x18\x04 \x01(\x0c\x12\x0c\n\x04hash\x18\x05 \x01(\t\x12\x13\n\x0binternal_id\x18\x06 \x01(\x05\"e\n\x0f\x43\x61talogResponse\x12\'\n\x08\x63ommands\x18\x01 \x03(\x0b\x32\x15.avap.CommandResponse\x12\x13\n\x0btotal_count\x18\x02 \x01(\x05\x12\x14\n\x0cversion_hash\x18\x03 \x01(\t\"\x87\x01\n\x10\x45xecutionRequest\x12\x10\n\x08\x61st_json\x18\x01 \x01(\t\x12\x32\n\x06inputs\x18\x02 \x03(\x0b\x32\".avap.ExecutionRequest.InputsEntry\x1a-\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"V\n\x11\x45xecutionResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x13\n\x0bresult_json\x18\x02 \x01(\t\x12\x0c\n\x04logs\x18\x03 \x03(\t\x12\r\n\x05\x65rror\x18\x04 \x01(\t2I\n\x0b\x41vapService\x12:\n\x07\x45xecute\x12\x16.avap.ExecutionRequest\x1a\x17.avap.ExecutionResponse2\x80\x01\n\x10\x44\x65\x66initionEngine\x12\x39\n\nGetCommand\x12\x14.avap.CommandRequest\x1a\x15.avap.CommandResponse\x12\x31\n\x0bSyncCatalog\x12\x0b.avap.Empty\x1a\x15.avap.CatalogResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'avap_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
+  _globals['_EXECUTIONREQUEST_INPUTSENTRY']._loaded_options = None
+  _globals['_EXECUTIONREQUEST_INPUTSENTRY']._serialized_options = b'8\001'
   _globals['_EMPTY']._serialized_start=20
   _globals['_EMPTY']._serialized_end=27
   _globals['_COMMANDREQUEST']._serialized_start=29
   _globals['_COMMANDREQUEST']._serialized_end=59
   _globals['_COMMANDRESPONSE']._serialized_start=61
-  _globals['_COMMANDRESPONSE']._serialized_end=158
-  _globals['_CATALOGRESPONSE']._serialized_start=160
-  _globals['_CATALOGRESPONSE']._serialized_end=261
-  _globals['_DEFINITIONENGINE']._serialized_start=264
-  _globals['_DEFINITIONENGINE']._serialized_end=392
+  _globals['_COMMANDRESPONSE']._serialized_end=179
+  _globals['_CATALOGRESPONSE']._serialized_start=181
+  _globals['_CATALOGRESPONSE']._serialized_end=282
+  _globals['_EXECUTIONREQUEST']._serialized_start=285
+  _globals['_EXECUTIONREQUEST']._serialized_end=420
+  _globals['_EXECUTIONREQUEST_INPUTSENTRY']._serialized_start=375
+  _globals['_EXECUTIONREQUEST_INPUTSENTRY']._serialized_end=420
+  _globals['_EXECUTIONRESPONSE']._serialized_start=422
+  _globals['_EXECUTIONRESPONSE']._serialized_end=508
+  _globals['_AVAPSERVICE']._serialized_start=510
+  _globals['_AVAPSERVICE']._serialized_end=583
+  _globals['_DEFINITIONENGINE']._serialized_start=586
+  _globals['_DEFINITIONENGINE']._serialized_end=714
 # @@protoc_insertion_point(module_scope)

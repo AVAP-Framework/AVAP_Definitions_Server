@@ -1,6 +1,6 @@
 FROM node:22-alpine
 
-RUN apk add --no-cache tini
+RUN apk add --no-cache tini python3 py3-pip
 ENTRYPOINT ["/sbin/tini", "--"]
 
 WORKDIR /app
@@ -12,7 +12,9 @@ RUN npm ci --only=production --ignore-scripts && npm cache clean --force
 # Copy needed files
 COPY src/ ./src/
 COPY avap.proto .
-
+COPY compiler.py .
+COPY opcodes.json .
+RUN chmod 644 opcodes.json compiler.py
 
 USER node
 

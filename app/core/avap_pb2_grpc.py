@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from . import avap_pb2 as avap__pb2
+import avap_pb2 as avap__pb2
 
 GRPC_GENERATED_VERSION = '1.76.0'
 GRPC_VERSION = grpc.__version__
@@ -23,6 +23,79 @@ if _version_not_supported:
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
     )
+
+
+class AvapServiceStub(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def __init__(self, channel):
+        """Constructor.
+
+        Args:
+            channel: A grpc.Channel.
+        """
+        self.Execute = channel.unary_unary(
+                '/avap.AvapService/Execute',
+                request_serializer=avap__pb2.ExecutionRequest.SerializeToString,
+                response_deserializer=avap__pb2.ExecutionResponse.FromString,
+                _registered_method=True)
+
+
+class AvapServiceServicer(object):
+    """Missing associated documentation comment in .proto file."""
+
+    def Execute(self, request, context):
+        """El método principal que llamará tu frontend o cliente
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+
+def add_AvapServiceServicer_to_server(servicer, server):
+    rpc_method_handlers = {
+            'Execute': grpc.unary_unary_rpc_method_handler(
+                    servicer.Execute,
+                    request_deserializer=avap__pb2.ExecutionRequest.FromString,
+                    response_serializer=avap__pb2.ExecutionResponse.SerializeToString,
+            ),
+    }
+    generic_handler = grpc.method_handlers_generic_handler(
+            'avap.AvapService', rpc_method_handlers)
+    server.add_generic_rpc_handlers((generic_handler,))
+    server.add_registered_method_handlers('avap.AvapService', rpc_method_handlers)
+
+
+ # This class is part of an EXPERIMENTAL API.
+class AvapService(object):
+    """Missing associated documentation comment in .proto file."""
+
+    @staticmethod
+    def Execute(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/avap.AvapService/Execute',
+            avap__pb2.ExecutionRequest.SerializeToString,
+            avap__pb2.ExecutionResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
 
 
 class DefinitionEngineStub(object):
@@ -50,14 +123,14 @@ class DefinitionEngineServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def GetCommand(self, request, context):
-        """Obtiene un solo comando (Legacy / Debug)
+        """Get only a command definition (Legacy / Debug)
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def SyncCatalog(self, request, context):
-        """NUEVO: Descarga el cerebro entero de una vez
+        """Get all the catalog definitions
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')

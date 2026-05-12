@@ -1,0 +1,77 @@
+{
+  "name": "AVAP-ISA",
+  "version": [0, 1, 0],
+  "halt_opcode": 255,
+  "description": "AVAP language instruction set for the Platon kernel",
+
+  "instructions": {
+    "NOP":             { "opcode":   0, "args": 0, "description": "No operation" },
+
+    "PUSH":            { "opcode":   1, "args": 1, "description": "Push constant[const_idx] onto stack" },
+    "POP":             { "opcode":   2, "args": 0, "description": "Discard top of stack" },
+    "DUP":             { "opcode":   3, "args": 0, "description": "Duplicate top of stack" },
+    "LOAD_NONE":       { "opcode":   4, "args": 0, "description": "Push Null onto stack" },
+    "LOAD":            { "opcode":  64, "args": 1, "description": "Push globals[name_idx] onto stack" },
+    "STORE":           { "opcode":  65, "args": 1, "description": "Pop and store into globals[name_idx]" },
+
+    "ADD":             { "opcode":  16, "args": 0, "description": "pop b, pop a, push a+b" },
+    "SUB":             { "opcode":  17, "args": 0, "description": "pop b, pop a, push a-b" },
+    "MUL":             { "opcode":  18, "args": 0, "description": "pop b, pop a, push a*b" },
+    "DIV":             { "opcode":  19, "args": 0, "description": "pop b, pop a, push a/b" },
+    "MOD":             { "opcode":  20, "args": 0, "description": "pop b, pop a, push a%b" },
+    "NEG":             { "opcode":  21, "args": 0, "description": "pop a, push -a" },
+    "NOT":             { "opcode":  22, "args": 0, "description": "pop a, push !a" },
+
+    "EQ":              { "opcode":  32, "args": 0, "description": "pop b, pop a, push a==b" },
+    "LT":              { "opcode":  33, "args": 0, "description": "pop b, pop a, push a<b" },
+    "GT":              { "opcode":  34, "args": 0, "description": "pop b, pop a, push a>b" },
+    "LTE":             { "opcode":  35, "args": 0, "description": "pop b, pop a, push a<=b" },
+    "GTE":             { "opcode":  36, "args": 0, "description": "pop b, pop a, push a>=b" },
+    "NEQ":             { "opcode":  37, "args": 0, "description": "pop b, pop a, push a!=b" },
+    "IN":              { "opcode":  38, "args": 0, "description": "pop container, pop item, push item in container" },
+    "NOT_IN":          { "opcode":  39, "args": 0, "description": "pop container, pop item, push item not in container" },
+    "IS":              { "opcode":  40, "args": 0, "description": "pop b, pop a, push a is b" },
+    "IS_NOT":          { "opcode":  41, "args": 0, "description": "pop b, pop a, push a is not b" },
+
+    "BOOL_AND":        { "opcode":  42, "args": 0, "description": "pop b, pop a, push a and b" },
+    "BOOL_OR":         { "opcode":  43, "args": 0, "description": "pop b, pop a, push a or b" },
+
+    "JMP":             { "opcode":  48, "args": 1, "description": "Unconditional jump to target_ip" },
+    "JMP_IF":          { "opcode":  49, "args": 1, "description": "Jump if top is truthy (no pop)" },
+    "JMP_IF_NOT":      { "opcode":  50, "args": 1, "description": "Jump if top is falsy (no pop)" },
+    "JMP_IF_POP":      { "opcode":  51, "args": 1, "description": "Jump if top is truthy and pop" },
+    "JMP_IF_NOT_POP":  { "opcode":  52, "args": 1, "description": "Jump if top is falsy and pop" },
+    "PUSH_TRY":        { "opcode":  53, "args": 1, "description": "Push exception handler at handler_ip" },
+    "POP_TRY":         { "opcode":  54, "args": 0, "description": "Pop exception handler" },
+    "RAISE":           { "opcode":  55, "args": 0, "description": "Raise top of stack as exception" },
+    "RETURN":          { "opcode":  56, "args": 0, "description": "Return top of stack from function" },
+
+    "GET_ITER":        { "opcode":  58, "args": 0, "description": "Pop iterable, push iterator" },
+    "FOR_ITER":        { "opcode":  59, "args": 1, "description": "Advance iterator; push next or jump to exit_ip" },
+
+    "GET_ATTR":        { "opcode":  80, "args": 1, "description": "Pop obj, push obj.name_idx" },
+    "SET_ATTR":        { "opcode":  81, "args": 1, "description": "Pop value, set obj.name_idx = value" },
+    "GET_ITEM":        { "opcode":  82, "args": 0, "description": "Pop key, pop obj, push obj[key]" },
+    "SET_ITEM":        { "opcode":  83, "args": 0, "description": "Pop value, pop key, set obj[key] = value" },
+    "DELETE_ITEM":     { "opcode":  84, "args": 0, "description": "Pop key, pop obj, del obj[key]" },
+
+    "BUILD_LIST":      { "opcode":  85, "args": 1, "description": "Pop n items, push [item0..itemN]" },
+    "BUILD_DICT":      { "opcode":  86, "args": 1, "description": "Pop 2n items (k,v pairs), push {k:v...}" },
+    "BUILD_TUPLE":     { "opcode":  87, "args": 1, "description": "Pop n items, push (item0..itemN)" },
+
+    "CALL_EXT":        { "opcode":  96, "args": 1, "description": "Call registered native function by func_id" },
+    "CALL_FUNC":       { "opcode":  97, "args": 1, "description": "Pop n_args + callable, call callable(*args)" },
+    "CALL_METHOD":     { "opcode":  98, "args": 2, "description": "Pop n_args + obj, call obj.name(*args)" },
+
+    "LOAD_CONECTOR":   { "opcode": 112, "args": 0, "description": "Push runtime.conector onto stack" },
+    "LOAD_TASK":       { "opcode": 113, "args": 0, "description": "Push runtime.task onto stack" },
+    "LOAD_BUILTIN":    { "opcode": 114, "args": 1, "description": "Push builtin function by name_idx" },
+    "IMPORT_MOD":      { "opcode": 144, "args": 1, "description": "Push module proxy by name_idx" },
+
+    "IS_INSTANCE":     { "opcode": 128, "args": 0, "description": "Pop type, pop obj, push isinstance(obj, type)" },
+    "IS_NONE":         { "opcode": 129, "args": 0, "description": "Pop obj, push obj is None" },
+    "TYPE_OF":         { "opcode": 130, "args": 0, "description": "Pop obj, push type name string" },
+
+    "HALT":            { "opcode": 255, "args": 0, "description": "Stop execution" }
+  }
+}

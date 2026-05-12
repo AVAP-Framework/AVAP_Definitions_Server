@@ -16,27 +16,12 @@ CREATE TABLE IF NOT EXISTS obex_dapl_functions (
 CREATE TABLE IF NOT EXISTS avap_bytecode (
     id SERIAL PRIMARY KEY,
     command_name VARCHAR(100) UNIQUE NOT NULL,
-
-    -- Legacy path: AVAP header (10b) + HMAC-SHA256 (32b) + Python source
-    -- Used by the exec() execution path in the Language Server
     bytecode BYTEA,
     version INTEGER DEFAULT 1,
     compiled_at TIMESTAMP DEFAULT NOW(),
     source_hash VARCHAR(64),
-    is_verified BOOLEAN DEFAULT FALSE,
-
-    -- Platon path: AVBC header (128b) + constant pool + ISA v2 instructions
-    -- Executed directly by the Rust VM — no exec(), no Python at runtime
-    -- NULL until the Definition Server compiles the command for the first time
-    avbc_bytecode    BYTEA     DEFAULT NULL,
-    avbc_version     SMALLINT  DEFAULT NULL,
-    avbc_compiled_at TIMESTAMP DEFAULT NULL
+    is_verified BOOLEAN DEFAULT FALSE
 );
-
--- Fast lookup: which commands are ready for Rust VM execution
-CREATE INDEX IF NOT EXISTS idx_avbc_ready
-    ON avap_bytecode (command_name)
-    WHERE avbc_bytecode IS NOT NULL;
 
 -- Inserting commands
 INSERT INTO obex_dapl_functions (name, interface, code) VALUES

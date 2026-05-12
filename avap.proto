@@ -2,6 +2,11 @@ syntax = "proto3";
 
 package avap;
 
+service AvapService {
+  // El método principal que llamará tu frontend o cliente
+  rpc Execute (ExecutionRequest) returns (ExecutionResponse);
+}
+
 service DefinitionEngine {
   // Get only a command definition (Legacy / Debug)
   rpc GetCommand (CommandRequest) returns (CommandResponse);
@@ -22,8 +27,11 @@ message CommandResponse {
   string name = 1;
   string type = 2;
   string interface_json = 3;
-  bytes code = 4;
+  bytes  code = 4;            // Legacy: AVAP header + HMAC + Python source (exec() path)
   string hash = 5;
+  int32  internal_id = 6;
+  bytes  avbc_code = 7;       // Platon: AVBC header + constant pool + ISA v2 instructions
+  int32  avbc_version = 8;    // ISA version used to compile avbc_code (0 if not compiled)
 }
 
 // All commands definitions
@@ -31,4 +39,17 @@ message CatalogResponse {
   repeated CommandResponse commands = 1;
   int32 total_count = 2;
   string version_hash = 3;
+}
+
+
+message ExecutionRequest {
+  string ast_json = 1;         // El AST en formato JSON que el Kernel compilará
+  map<string, string> inputs = 2; // Variables iniciales (inyectadas en vm.globals)
+}
+
+message ExecutionResponse {
+  bool success = 1;            // ¿Terminó la VM sin errores?
+  string result_json = 2;      // Estado final de las variables (vm.globals)
+  repeated string logs = 3;    // Logs capturados durante la ejecución
+  string error = 4;            // Mensaje de error si success es false
 }

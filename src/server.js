@@ -53,7 +53,8 @@ async function startServer() {
         },
         SyncCatalog: (call, callback) => {
             return logic.syncCatalogLogic(call, callback, API_KEY_BUFFER);
-        }
+        },
+        Execute: (call, callback) => logic.executeLogic(call, callback, API_KEY_BUFFER)
     });
 
     // Health Check
